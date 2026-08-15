@@ -6,7 +6,7 @@ constexpr CTS GATEWAY_IP = "192.168.0.1";
 constexpr CTS INTERFACE  = "wlp1s0";
 
 constexpr auto CHECK_RULE  = CTS("ip rule show to ") + TARGET_IP;
-constexpr auto CHECK_ROUTE = CTS("ip route show table 100 host ") + TARGET_IP;
+constexpr auto CHECK_ROUTE = CTS("ip route show table 100 to ") + TARGET_IP;
 constexpr auto CMD_ROUTE   = CTS("ip route add ")
     + TARGET_IP
     + CTS(" via ")
@@ -19,7 +19,7 @@ constexpr auto CMD_RULE =
     + TARGET_IP
     + CTS(" table 100 priority 10");
 
-constexpr auto SEARCH_RULE_TARGET  = CTS("table 100");
+constexpr auto SEARCH_RULE_TARGET  = CTS("lookup 100");
 constexpr auto SEARCH_ROUTE_TARGET = GATEWAY_IP;
 
 int main() {
