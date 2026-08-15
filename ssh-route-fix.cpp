@@ -49,8 +49,8 @@ int main(int argc, char* argv[]) {
         if (arg == "--silent") silent = true;
         else if (arg == "--restore") restore = true;
         else {
-        	std::cerr << "Unknown flag: " << arg << "\n";
-        	return 1;
+            std::cerr << "Unknown flag: " << arg << "\n";
+            return 1;
         }
     }
 
