@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (rule_exists && route_exists) {
-        log("[=] Route and ip rule for " + std::string(TARGET_IP.data()) + " already exist. Doing nothing.\n");
+        log("[=] Route and ip rule already exist. Doing nothing.\n");
         return 0;
     }
 
