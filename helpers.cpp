@@ -1,6 +1,3 @@
-#ifndef HELPERS_CPP
-#define HELPERS_CPP
-
 #include <array>
 #include <cstdlib>
 #include <unistd.h>
@@ -60,5 +57,3 @@ constexpr auto to_array(const CTS<N>& cs) {
     for (size_t i = 0; i < N; ++i) arr[i] = cs.buf[i];
     return arr;
 }
-
-#endif // HELPERS_CPP
