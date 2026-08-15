@@ -50,6 +50,11 @@ bool output_contains(const char* cmd, const std::array<char, N>& target_arr) {
     return false;
 }
 
+template <size_t N_cmd, size_t N_target>
+bool output_contains(const CTS<N_cmd>& cmd, const CTS<N_target>& target) {
+    return output_contains(cmd.data(), to_array(target));
+}
+
 // Helper to convert CTS to std::array for output_contains
 template <size_t N>
 constexpr auto to_array(const CTS<N>& cs) {

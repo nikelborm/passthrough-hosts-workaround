@@ -8,7 +8,8 @@ constexpr CTS INTERFACE  = "wlp1s0";
 
 constexpr auto CHECK_RULE  = CTS("ip rule show to ") + TARGET_IP;
 constexpr auto CHECK_ROUTE = CTS("ip route show table 100 to ") + TARGET_IP;
-constexpr auto CMD_ROUTE   = CTS("ip route add ")
+constexpr auto CMD_ROUTE =
+    CTS("ip route add ")
     + TARGET_IP
     + CTS(" via ")
     + GATEWAY_IP
@@ -24,6 +25,7 @@ constexpr auto SEARCH_RULE_TARGET  = CTS("lookup 100");
 constexpr auto SEARCH_ROUTE_TARGET = GATEWAY_IP;
 
 int main(int argc, char* argv[]) {
+    // no other flags are planned for the future, so keep it simple
     bool silent = (argc > 1) && (std::string(argv[1]) == "--silent");
 
     auto log = [silent](auto const& msg) {
@@ -35,8 +37,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    bool rule_exists  = output_contains(CHECK_RULE.data(), to_array(SEARCH_RULE_TARGET));
-    bool route_exists = output_contains(CHECK_ROUTE.data(), to_array(SEARCH_ROUTE_TARGET));
+    bool rule_exists  = output_contains(CHECK_RULE, SEARCH_RULE_TARGET);
+    bool route_exists = output_contains(CHECK_ROUTE, SEARCH_ROUTE_TARGET);
 
     if (rule_exists && route_exists) {
         log("[=] Route and ip rule for " + std::string(TARGET_IP.data()) + " already exist. Doing nothing.\n");
