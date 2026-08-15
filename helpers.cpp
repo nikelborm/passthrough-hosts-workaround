@@ -3,20 +3,22 @@
 #include <unistd.h>
 #include <cstdio>
 
-template <size_t N>
+template <size_t TSize>
 // Compile-Time String of fixed-capacity for constexpr concatenation
 struct CTS {
-    char buf[N] = {};
+    char buf[TSize] = {};
 
-    constexpr CTS(const char (&s)[N]) {
-        for (size_t i = 0; i < N; ++i) buf[i] = s[i];
+    constexpr CTS(const char (&s)[TSize]) {
+        for (size_t i = 0; i < TSize; ++i) buf[i] = s[i];
     }
 
-    template <size_t N1, size_t N2>
-    constexpr CTS(const CTS<N1>& a, const CTS<N2>& b) {
-        size_t idx = 0;
-        for (size_t i = 0; i < N1 - 1; ++i) buf[idx++] = a.buf[i];
-        for (size_t i = 0; i < N2; ++i) buf[idx++] = b.buf[i];
+    template <size_t ASize, size_t BSize>
+    constexpr CTS(const CTS<ASize>& a, const CTS<BSize>& b) {
+        size_t a_size_without_termination = ASize - 1;
+        for (size_t i = 0; i < a_size_without_termination; ++i)
+            buf[i] = a.buf[i];
+        for (size_t i2 = 0; i2 < BSize; ++i2)
+            buf[a_size_without_termination + i2] = b.buf[i2];
     }
 
     constexpr const char* data() const { return buf; }
