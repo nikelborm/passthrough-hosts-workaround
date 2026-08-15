@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include "helpers.cpp"
 
 constexpr CTS TARGET_IP  = "80.237.111.146";
@@ -22,7 +23,13 @@ constexpr auto CMD_RULE =
 constexpr auto SEARCH_RULE_TARGET  = CTS("lookup 100");
 constexpr auto SEARCH_ROUTE_TARGET = GATEWAY_IP;
 
-int main() {
+int main(int argc, char* argv[]) {
+    bool silent = (argc > 1) && (std::string(argv[1]) == "--silent");
+
+    auto log = [silent](auto const& msg) {
+        if (!silent) std::cout << msg;
+    };
+
     if (setuid(0) != 0) {
         perror("setuid failed");
         return 1;
@@ -32,20 +39,20 @@ int main() {
     bool route_exists = output_contains(CHECK_ROUTE.data(), to_array(SEARCH_ROUTE_TARGET));
 
     if (rule_exists && route_exists) {
-        std::cout << "[=] Route and ip rule for " << TARGET_IP.data() << " already exist. Doing nothing.\n";
+        log("[=] Route and ip rule for " + std::string(TARGET_IP.data()) + " already exist. Doing nothing.\n");
         return 0;
     }
 
     if (!route_exists) {
-        std::cout << "[+] Adding route in table 100...\n";
+        log("[+] Adding route in table 100...\n");
         if (system(CMD_ROUTE.data()) != 0) return 1;
     }
 
     if (!rule_exists) {
-        std::cout << "[+] Adding ip rule (priority 10)...\n";
+        log("[+] Adding ip rule (priority 10)...\n");
         if (system(CMD_RULE.data()) != 0) return 1;
     }
 
-    std::cout << "[✓] Route isolation verified and active.\n";
+    log("[✓] Route isolation verified and active.\n");
     return 0;
 }
