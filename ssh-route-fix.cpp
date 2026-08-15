@@ -58,6 +58,11 @@ int main(int argc, char* argv[]) {
     bool route_exists = output_contains(CHECK_ROUTE, SEARCH_ROUTE_TARGET);
 
     if (restore) {
+        if (!rule_exists && !route_exists) {
+            log("[=] Nothing to restore.\n");
+            return 0;
+        }
+
         if (rule_exists) {
             log("[-] Removing ip rule (priority 10)...\n");
             if (system(RESTORE_RULE_CMD.data()) != 0) return 1;
@@ -68,11 +73,7 @@ int main(int argc, char* argv[]) {
             if (system(RESTORE_ROUTE_CMD.data()) != 0) return 1;
         }
 
-        if (!rule_exists && !route_exists)
-            log("[=] Nothing to restore.\n");
-        else
-            log("[✓] Route isolation removed.\n");
-
+        log("[✓] Route isolation removed.\n");
         return 0;
     }
 
