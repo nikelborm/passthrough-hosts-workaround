@@ -48,6 +48,10 @@ int main(int argc, char* argv[]) {
         std::string arg = argv[i];
         if (arg == "--silent") silent = true;
         else if (arg == "--restore") restore = true;
+        else {
+        	std::cerr << "Unknown flag: " << arg << "\n";
+        	return 1;
+        }
     }
 
     auto log = [silent](auto const& msg) {
