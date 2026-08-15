@@ -21,7 +21,7 @@ The binary is designed to be set up with the SUID bit to allow execution without
 ### Automatic Integration via .ssh/config
 
 You can integrate the binary directly into your `~/.ssh/config` so it runs
-automatically before every connection to a specific host.
+automatically before any connection to a specific host.
 
 Add the following to your `~/.ssh/config`:
 
