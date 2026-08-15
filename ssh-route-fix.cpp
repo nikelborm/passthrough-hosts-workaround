@@ -59,12 +59,12 @@ int main(int argc, char* argv[]) {
 
     if (restore) {
         if (rule_exists) {
-            log("[+] Removing ip rule (priority 10)...\n");
+            log("[-] Removing ip rule (priority 10)...\n");
             if (system(RESTORE_RULE_CMD.data()) != 0) return 1;
         }
 
         if (route_exists) {
-            log("[+] Removing route in table 100...\n");
+            log("[-] Removing route in table 100...\n");
             if (system(RESTORE_ROUTE_CMD.data()) != 0) return 1;
         }
 
