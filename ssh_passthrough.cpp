@@ -34,7 +34,6 @@ constexpr CTS TARGET_IP  = "80.237.111.146";
 constexpr CTS GATEWAY_IP = "192.168.0.1";
 constexpr CTS INTERFACE  = "wlp1s0";
 
-// Commands & Targets generated strictly at compile-time (stored in .rodata)
 constexpr auto CHECK_RULE  = CTS("ip rule show to ") + TARGET_IP;
 constexpr auto CHECK_ROUTE = CTS("ip route show table 100 host ") + TARGET_IP;
 constexpr auto CMD_ROUTE   = CTS("ip route add ")
