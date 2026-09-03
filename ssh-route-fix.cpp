@@ -52,12 +52,30 @@ constexpr auto USAGE =
     + INTERFACE
     + CTS(".\n\n")
     + CTS("Options:\n")
-    + CTS("  --silent    Suppress output messages\n")
-    + CTS("  --restore   Remove the route and ip rule instead of installing them\n")
-    + CTS("  --help      Show this help message and exit\n");
+    + CTS("  --silent             Suppress output messages\n")
+    + CTS("  --restore            Remove the route and ip rule instead of installing them\n")
+    + CTS("  --print-completion   Print the bash completion script and exit\n")
+    + CTS("  --help               Show this help message and exit\n");
+
+constexpr auto COMPLETION_SCRIPT =
+    CTS("# bash completions for ssh-route-fix\n")
+    + CTS("_ssh_route_fix() {\n")
+    + CTS("    local cur opts\n")
+    + CTS("    cur=\"${COMP_WORDS[COMP_CWORD]}\"\n")
+    + CTS("    opts='--silent --restore --print-completion --help -h'\n")
+    + CTS("    if [[ \"$cur\" == -* ]]; then\n")
+    + CTS("        COMPREPLY=( $(compgen -W \"$opts\" -- \"$cur\") )\n")
+    + CTS("    fi\n")
+    + CTS("    return 0\n")
+    + CTS("}\n")
+    + CTS("complete -F _ssh_route_fix ssh-route-fix\n");
 
 void print_usage() {
     std::cout << USAGE.data();
+}
+
+void print_completion() {
+    std::cout << COMPLETION_SCRIPT.data();
 }
 
 bool validate_installation() {
@@ -120,6 +138,10 @@ int main(int argc, char* argv[]) {
         std::string arg = argv[i];
         if (arg == "--help" || arg == "-h") {
             print_usage();
+            return 0;
+        }
+        if (arg == "--print-completion") {
+            print_completion();
             return 0;
         }
     }
