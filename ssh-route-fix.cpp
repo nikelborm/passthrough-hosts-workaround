@@ -1,5 +1,12 @@
 #include <iostream>
 #include <string>
+#include <climits>
+#include <cstdio>
+#include <cstring>
+#include <cerrno>
+#include <grp.h>
+#include <pwd.h>
+#include <sys/stat.h>
 #include "helpers.cpp"
 
 constexpr CTS TARGET_IP  = "80.237.111.146";
@@ -35,7 +42,92 @@ constexpr auto RESTORE_RULE_CMD =
 constexpr auto SEARCH_RULE_TARGET  = CTS("lookup 100");
 constexpr auto SEARCH_ROUTE_TARGET = GATEWAY_IP;
 
+constexpr auto USAGE =
+    CTS("Usage: ssh-route-fix [OPTIONS]\n\n")
+    + CTS("Installs route isolation for ")
+    + TARGET_IP
+    + CTS(" via gateway ")
+    + GATEWAY_IP
+    + CTS(" on interface ")
+    + INTERFACE
+    + CTS(".\n\n")
+    + CTS("Options:\n")
+    + CTS("  --silent    Suppress output messages\n")
+    + CTS("  --restore   Remove the route and ip rule instead of installing them\n")
+    + CTS("  --help      Show this help message and exit\n");
+
+void print_usage() {
+    std::cout << USAGE.data();
+}
+
+bool validate_installation() {
+    char exe_path[PATH_MAX];
+    ssize_t len = readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1);
+    if (len <= 0) {
+        std::cerr << "Error: cannot resolve own binary path via /proc/self/exe: "
+                  << std::strerror(errno) << "\n";
+        return false;
+    }
+    exe_path[len] = '\0';
+
+    struct stat st{};
+    if (stat(exe_path, &st) != 0) {
+        std::cerr << "Error: cannot stat own binary '" << exe_path << "': "
+                  << std::strerror(errno) << "\n";
+        return false;
+    }
+
+    constexpr mode_t EXPECTED_MODE = S_ISUID | 0755;
+    const mode_t actual_mode = st.st_mode & 07777;
+
+    std::string problems;
+
+    if (st.st_uid != 0) {
+        struct passwd* pw = getpwuid(st.st_uid);
+        problems += "  - owner is uid " + std::to_string(st.st_uid);
+        if (pw) problems += std::string(" (") + pw->pw_name + ")";
+        problems += ", expected root (uid 0)\n";
+    }
+
+    if (st.st_gid != 0) {
+        struct group* gr = getgrgid(st.st_gid);
+        problems += "  - group is gid " + std::to_string(st.st_gid);
+        if (gr) problems += std::string(" (") + gr->gr_name + ")";
+        problems += ", expected root (gid 0)\n";
+    }
+
+    if (actual_mode != EXPECTED_MODE) {
+        char octal[8];
+        std::snprintf(octal, sizeof(octal), "%04o", actual_mode);
+        problems += std::string("  - permissions are 0") + octal
+                  + ", expected 04755";
+        if (!(actual_mode & S_ISUID)) problems += " (the setuid flag is missing)";
+        problems += "\n";
+    }
+
+    if (!problems.empty()) {
+        std::cerr << "Error: " << exe_path << " is not installed correctly:\n"
+                  << problems
+                  << "Reinstall it properly with 'make install'.\n";
+        return false;
+    }
+
+    return true;
+}
+
 int main(int argc, char* argv[]) {
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--help" || arg == "-h") {
+            print_usage();
+            return 0;
+        }
+    }
+
+    if (!validate_installation()) {
+        return 1;
+    }
+
     if (setuid(0) != 0) {
         perror("setuid failed");
         return 1;
