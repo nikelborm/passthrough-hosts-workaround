@@ -1,3 +1,4 @@
+#include <ostream>
 #include <array>
 #include <cstdlib>
 #include <unistd.h>
@@ -28,6 +29,11 @@ struct CTS {
 template <size_t ASize, size_t BSize>
 constexpr auto operator+(const CTS<ASize>& a, const CTS<BSize>& b) {
     return CTS<ASize + BSize - 1>(a, b);
+}
+
+template <size_t TSize>
+std::ostream& operator<<(std::ostream& os, const CTS<TSize>& cs) {
+    return os.write(cs.data(), static_cast<std::streamsize>(cs.size()));
 }
 
 // Flattened stream matcher

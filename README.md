@@ -18,9 +18,9 @@ make install
 
 The binary is designed to be set up with the SUID bit to allow execution without `sudo`.
 
-`TARGET_IP`, `GATEWAY_IP`, `INTERFACE` are hardcoded values into the
-`ssh-route-fix.cpp`, because I have only one host that needs this and run this
-only on my laptop with the specific network interface name.
+`TARGET_IP_0`, `TARGET_IP_1`, `GATEWAY_IP`, `INTERFACE` are hardcoded values
+into the `ssh-route-fix.cpp`, because I have only a couple of hosts that need
+this and run this only on my laptop with the specific network interface name.
 
 ### Automatic Integration via .ssh/config
 

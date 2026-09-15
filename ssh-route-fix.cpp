@@ -9,43 +9,93 @@
 #include <sys/stat.h>
 #include "helpers.cpp"
 
-constexpr CTS TARGET_IP  = "80.237.111.146";
+constexpr CTS TARGET_IP_0 = "80.237.111.146";
+// github
+constexpr CTS TARGET_IP_1 = "140.82.121.3";
 constexpr CTS GATEWAY_IP = "192.168.0.1";
 constexpr CTS INTERFACE  = "wlp1s0";
-
-constexpr auto CHECK_RULE  =
-    CTS("ip rule show to ")
-    + TARGET_IP;
-constexpr auto CHECK_ROUTE =
-    CTS("ip route show table 100 to ")
-    + TARGET_IP;
-constexpr auto INSTALL_ROUTE_CMD =
-    CTS("ip route add ")
-    + TARGET_IP
-    + CTS(" via ")
-    + GATEWAY_IP
-    + CTS(" dev ")
-    + INTERFACE
-    + CTS(" table 100");
-constexpr auto INSTALL_RULE_CMD =
-    CTS("ip rule add to ")
-    + TARGET_IP
-    + CTS(" table 100 priority 10");
-constexpr auto RESTORE_ROUTE_CMD =
-    CTS("ip route del table 100 to ")
-    + TARGET_IP;
-constexpr auto RESTORE_RULE_CMD =
-    CTS("ip rule del to ")
-    + TARGET_IP
-    + CTS(" table 100 priority 10");
 
 constexpr auto SEARCH_RULE_TARGET  = CTS("lookup 100");
 constexpr auto SEARCH_ROUTE_TARGET = GATEWAY_IP;
 
+// Installs (or with `restore`, removes) the route isolation for one target IP.
+// All commands are built at compile time, so the target is a template parameter.
+template <auto TARGET_IP>
+bool process_target(bool restore, const auto& log) {
+    constexpr auto CHECK_RULE  =
+        CTS("ip rule show to ")
+        + TARGET_IP;
+    constexpr auto CHECK_ROUTE =
+        CTS("ip route show table 100 to ")
+        + TARGET_IP;
+    constexpr auto INSTALL_ROUTE_CMD =
+        CTS("ip route add ")
+        + TARGET_IP
+        + CTS(" via ")
+        + GATEWAY_IP
+        + CTS(" dev ")
+        + INTERFACE
+        + CTS(" table 100");
+    constexpr auto INSTALL_RULE_CMD =
+        CTS("ip rule add to ")
+        + TARGET_IP
+        + CTS(" table 100 priority 10");
+    constexpr auto RESTORE_ROUTE_CMD =
+        CTS("ip route del table 100 to ")
+        + TARGET_IP;
+    constexpr auto RESTORE_RULE_CMD =
+        CTS("ip rule del to ")
+        + TARGET_IP
+        + CTS(" table 100 priority 10");
+
+    bool rule_exists  = output_contains(CHECK_RULE, SEARCH_RULE_TARGET);
+    bool route_exists = output_contains(CHECK_ROUTE, SEARCH_ROUTE_TARGET);
+
+    if (restore) {
+        if (!rule_exists && !route_exists) {
+            log(CTS("[=] Nothing to restore for ") + TARGET_IP + CTS(".\n"));
+            return true;
+        }
+
+        if (rule_exists) {
+            log(CTS("[-] Removing ip rule (priority 10) for ") + TARGET_IP + CTS("...\n"));
+            if (system(RESTORE_RULE_CMD.data()) != 0) return false;
+        }
+
+        if (route_exists) {
+            log(CTS("[-] Removing route in table 100 for ") + TARGET_IP + CTS("...\n"));
+            if (system(RESTORE_ROUTE_CMD.data()) != 0) return false;
+        }
+
+        log(CTS("[✓] Route isolation removed for ") + TARGET_IP + CTS(".\n"));
+        return true;
+    }
+
+    if (rule_exists && route_exists) {
+        log(CTS("[=] Route and ip rule for ") + TARGET_IP + CTS(" already exist. Doing nothing.\n"));
+        return true;
+    }
+
+    if (!route_exists) {
+        log(CTS("[+] Adding route in table 100 for ") + TARGET_IP + CTS("...\n"));
+        if (system(INSTALL_ROUTE_CMD.data()) != 0) return false;
+    }
+
+    if (!rule_exists) {
+        log(CTS("[+] Adding ip rule (priority 10) for ") + TARGET_IP + CTS("...\n"));
+        if (system(INSTALL_RULE_CMD.data()) != 0) return false;
+    }
+
+    log(CTS("[✓] Route isolation verified and active for ") + TARGET_IP + CTS(".\n"));
+    return true;
+}
+
 constexpr auto USAGE =
     CTS("Usage: ssh-route-fix [OPTIONS]\n\n")
     + CTS("Installs route isolation for ")
-    + TARGET_IP
+    + TARGET_IP_0
+    + CTS(" and ")
+    + TARGET_IP_1
     + CTS(" via gateway ")
     + GATEWAY_IP
     + CTS(" on interface ")
@@ -172,44 +222,8 @@ int main(int argc, char* argv[]) {
         if (!silent) std::cout << msg;
     };
 
-    bool rule_exists  = output_contains(CHECK_RULE, SEARCH_RULE_TARGET);
-    bool route_exists = output_contains(CHECK_ROUTE, SEARCH_ROUTE_TARGET);
+    bool ok = process_target<TARGET_IP_0>(restore, log);
+    ok = process_target<TARGET_IP_1>(restore, log) && ok;
 
-    if (restore) {
-        if (!rule_exists && !route_exists) {
-            log("[=] Nothing to restore.\n");
-            return 0;
-        }
-
-        if (rule_exists) {
-            log("[-] Removing ip rule (priority 10)...\n");
-            if (system(RESTORE_RULE_CMD.data()) != 0) return 1;
-        }
-
-        if (route_exists) {
-            log("[-] Removing route in table 100...\n");
-            if (system(RESTORE_ROUTE_CMD.data()) != 0) return 1;
-        }
-
-        log("[✓] Route isolation removed.\n");
-        return 0;
-    }
-
-    if (rule_exists && route_exists) {
-        log("[=] Route and ip rule already exist. Doing nothing.\n");
-        return 0;
-    }
-
-    if (!route_exists) {
-        log("[+] Adding route in table 100...\n");
-        if (system(INSTALL_ROUTE_CMD.data()) != 0) return 1;
-    }
-
-    if (!rule_exists) {
-        log("[+] Adding ip rule (priority 10)...\n");
-        if (system(INSTALL_RULE_CMD.data()) != 0) return 1;
-    }
-
-    log("[✓] Route isolation verified and active.\n");
-    return 0;
+    return ok ? 0 : 1;
 }
