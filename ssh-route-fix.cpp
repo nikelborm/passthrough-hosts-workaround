@@ -12,6 +12,11 @@
 constexpr CTS TARGET_IP_0 = "80.237.111.146";
 // github
 constexpr CTS TARGET_IP_1 = "140.82.121.3";
+constexpr CTS TARGET_IP_2 = "140.82.121.6";
+constexpr CTS TARGET_IP_3 = "140.82.121.4";
+constexpr CTS TARGET_IP_4 = "140.82.114.22";
+constexpr CTS TARGET_IP_5 = "185.199.110.215";
+
 constexpr CTS GATEWAY_IP = "192.168.0.1";
 constexpr CTS INTERFACE  = "wlp1s0";
 
@@ -224,6 +229,10 @@ int main(int argc, char* argv[]) {
 
     bool ok = process_target<TARGET_IP_0>(restore, log);
     ok = process_target<TARGET_IP_1>(restore, log) && ok;
+    ok = process_target<TARGET_IP_2>(restore, log) && ok;
+    ok = process_target<TARGET_IP_3>(restore, log) && ok;
+    ok = process_target<TARGET_IP_4>(restore, log) && ok;
+    ok = process_target<TARGET_IP_5>(restore, log) && ok;
 
     return ok ? 0 : 1;
 }
